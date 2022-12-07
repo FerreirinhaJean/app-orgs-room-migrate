@@ -11,6 +11,7 @@ import br.com.alura.orgs.databinding.ActivityLoginBinding
 import br.com.alura.orgs.extensions.vaiPara
 import br.com.alura.orgs.preferences.dataStore
 import br.com.alura.orgs.preferences.usuarioLogadoPreferences
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
@@ -27,6 +28,14 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         configuraBotaoCadastrar()
         configuraBotaoEntrar()
+
+//        lifecycleScope.launch {
+//            dataStore.data.collect { preferences ->
+//                preferences[usuarioLogadoPreferences]?.let {idUsuario
+//                    usuarioDao.buscaPorId()
+//                }
+//            }
+//        }
     }
 
     private fun configuraBotaoEntrar() {
@@ -40,6 +49,7 @@ class LoginActivity : AppCompatActivity() {
                     dataStore.edit { preferences ->
                         preferences[usuarioLogadoPreferences] = usuario.id
                         vaiPara(ListaProdutosActivity::class.java)
+                        finish()
                     }
                 } ?: Toast.makeText(this@LoginActivity, "Falha na autenticação", Toast.LENGTH_SHORT)
                     .show()
