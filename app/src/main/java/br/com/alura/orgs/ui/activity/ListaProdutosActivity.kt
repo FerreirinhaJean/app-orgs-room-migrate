@@ -45,9 +45,8 @@ class ListaProdutosActivity : UsuarioBaseActivity() {
             launch {
                 usuario
                     .filterNotNull()
-                    .collect {
-                        Log.i("ListaProdutos", "onCreate: $it")
-                        buscaProdutosUsuario()
+                    .collect { usuario ->
+                        buscaProdutosUsuario(usuario.id)
                     }
             }
         }
@@ -69,8 +68,8 @@ class ListaProdutosActivity : UsuarioBaseActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private suspend fun buscaProdutosUsuario() {
-        produtoDao.buscaTodos().collect { produtos ->
+    private suspend fun buscaProdutosUsuario(usuarioID: String) {
+        produtoDao.buscaTodosDoUsuario(usuarioID).collect { produtos ->
             adapter.atualiza(produtos)
         }
     }
