@@ -16,12 +16,15 @@ import br.com.alura.orgs.preferences.dataStore
 import br.com.alura.orgs.preferences.usuarioLogadoPreferences
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 
-class ListaProdutosActivity : AppCompatActivity() {
+class ListaProdutosActivity : UsuarioBaseActivity() {
 
     private val adapter = ListaProdutosAdapter(context = this)
     private val binding by lazy {
@@ -30,9 +33,6 @@ class ListaProdutosActivity : AppCompatActivity() {
     private val produtoDao by lazy {
         val db = AppDatabase.instancia(this)
         db.produtoDao()
-    }
-    private val usuarioDao by lazy {
-        AppDatabase.instancia(this).usuarioDao()
     }
 
 
@@ -43,37 +43,13 @@ class ListaProdutosActivity : AppCompatActivity() {
         configuraFab()
         lifecycleScope.launch {
             launch {
-                verificaUsuarioLogado()
+                usuario
+                    .filterNotNull()
+                    .collect {
+                        Log.i("ListaProdutos", "onCreate: $it")
+                        buscaProdutosUsuario()
+                    }
             }
-        }
-    }
-
-    private suspend fun verificaUsuarioLogado() {
-        dataStore.data.collect { preferences ->
-            preferences[usuarioLogadoPreferences]?.let { idUsuario ->
-                buscaUsuario(idUsuario)
-            } ?: vaiParaLogin()
-        }
-    }
-
-    private fun vaiParaLogin() {
-        vaiPara(LoginActivity::class.java)
-        finish()
-    }
-
-    private suspend fun buscaUsuario(idUsuario: String) {
-        lifecycleScope.launch {
-            usuarioDao.buscaPorId(idUsuario).firstOrNull()?.let {
-                launch {
-                    buscaProdutosUsuario()
-                }
-            }
-        }
-    }
-
-    private suspend fun buscaProdutosUsuario() {
-        produtoDao.buscaTodos().collect { produtos ->
-            adapter.atualiza(produtos)
         }
     }
 
@@ -93,11 +69,9 @@ class ListaProdutosActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private suspend fun deslogaUsuario() {
-        dataStore.edit { preferences ->
-            preferences.remove(usuarioLogadoPreferences)
-            vaiPara(LoginActivity::class.java)
-            finish()
+    private suspend fun buscaProdutosUsuario() {
+        produtoDao.buscaTodos().collect { produtos ->
+            adapter.atualiza(produtos)
         }
     }
 
